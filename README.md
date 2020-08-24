@@ -18,7 +18,7 @@ $ git clone https://github.com/leaemiliepradier/PlasForest
 ````
 The use of PlasForest requires to download a database of plasmid sequences (2.5GB). This script should be launched from the directory in which PlasForest is stored:
 ````
-./database_downloader.sh
+$ ./database_downloader.sh
 ````
 
 ## Minimal use
