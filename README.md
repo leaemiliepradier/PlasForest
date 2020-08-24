@@ -16,11 +16,27 @@ Clone this git on your computer:
 ````
 $ git clone https://github.com/leaemiliepradier/PlasForest
 ````
+Python dependencies can be manually installed using ```pip```:
+````
+pip install --user biopython numpy pandas joblib scikit-learn==0.22.2.post1
+````
+on Ubuntu/Debian, NCBI Blast+ can be installed through the repositories with the command ```sudo apt-get install ncbi-blast+```. For other systems, it is advised to download the binaries from the NCBI FTP repository:
+````
+# Download latest BLAST version
+# For systems other than Linux, check the FTP for a compatible version
+$ wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.1+-x64-linux.tar.gz
+# Decompress
+$ tar -zxvf ncbi-blast-2.10.1+-x64-linux.tar.gz
+# Add BLAST location to system PATH
+$ export PATH=$HOME/ncbi-blast-2.10.1+/bin:$PATH
+````
+
 Untar the random forest classifier:
 ````
-$ tar -xzvf plasforest.sav.tar.gz
+$ cd PlasForest/
+$ tar -zxvf plasforest.sav.tar.gz
 ````
-The use of PlasForest requires to download a database of plasmid sequences (2.5GB). This script should be launched from the directory in which PlasForest is stored:
+The use of PlasForest requires to download a database of plasmid sequences (2.5GB). This script should be launched from the directory in which ```PlasForest.py``` and ```plasforest.sav``` are stored:
 ````
 $ ./database_downloader.sh
 ````
