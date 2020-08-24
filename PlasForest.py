@@ -28,7 +28,7 @@ def main(argv):
     print("PlasForest: a homology-based random forest classifier for plasmid identification.")
     print("(C) Lea Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier, Stephanie Bedhomme. 2020.")
     try:
-        opts, args = getopt.getopt(argv,"hi:o:bf", ["help","input=","output="])
+        opts, args = getopt.getopt(argv,"hi:obf", ["help","input=","output="])
     except getopt.GetoptError:
         print('./PlasForest.py -i <inputfile> -o <outputfile>')
         print('\t -i, --input=<inputfile>: a FASTA input file')
@@ -54,6 +54,7 @@ def main(argv):
                 print('./PlasForest.py -i <inputfile> -o <outputfile>')
                 print('Error: input file must be in FASTA format.')
                 sys.exit()
+            outputfile = inputfile+".csv"
         elif opt in ("-o", "--output"):
             outputfile = arg
             if not arg.endswith(".csv"):
