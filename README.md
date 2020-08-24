@@ -32,4 +32,5 @@ $ python PlasForest.py -i /path/to/your/inputfile.fasta -o /path/to/your/outputf
 ````
 
 ## Additional options
-
+Option ```-b``` will add a third column to the output file, with the identification number of the best hit in the plasmid database.
+Option ```-f``` will add seven columns to the output file, with the features measured for each contig.
