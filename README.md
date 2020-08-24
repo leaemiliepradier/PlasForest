@@ -16,6 +16,10 @@ Clone this git on your computer:
 ````
 $ git clone https://github.com/leaemiliepradier/PlasForest
 ````
+Untar the random forest classifier:
+````
+$ tar -xzvf plasforest.sav.tar.gz
+````
 The use of PlasForest requires to download a database of plasmid sequences (2.5GB). This script should be launched from the directory in which PlasForest is stored:
 ````
 $ ./database_downloader.sh
@@ -33,4 +37,5 @@ $ python PlasForest.py -i /path/to/your/inputfile.fasta -o /path/to/your/outputf
 
 ## Additional options
 Option ```-b``` will add a third column to the output file, with the identification number of the best hit in the plasmid database.
+
 Option ```-f``` will add seven columns to the output file, with the features measured for each contig.
