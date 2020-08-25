@@ -40,8 +40,8 @@ The use of PlasForest requires to download a database of plasmid sequences (2.5G
 ````
 $ ./database_downloader.sh
 ````
-
-## Minimal use
+## Manual
+### Minimal use
 PlasForest requires at least an input FASTA file, and generates an column-separated output file.
 ````
 $ python PlasForest.py -i /path/to/your/inputfile.fasta
@@ -51,7 +51,9 @@ You can also specify the name of the output file.
 $ python PlasForest.py -i /path/to/your/inputfile.fasta -o /path/to/your/outputfile.csv
 ````
 
-## Additional options
+### Additional options
 Option ```-b``` will add a third column to the output file, with the identification number of the best hit in the plasmid database.
 
 Option ```-f``` will add seven columns to the output file, with the features measured for each contig.
+
+Option ```-v```can activate verbose mode.
