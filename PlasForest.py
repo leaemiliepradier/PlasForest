@@ -1,4 +1,26 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
+
+#######################################################################################
+###                                                                                 ###
+###     PlasForest 1.1                                                              ###
+###     Copyright (C) 2020  Léa Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier,  ###
+###                         Stéphanie Bedhomme. (leaemiliepradier@gmail.com)        ###
+###                                                                                 ###
+###     This program is free software: you can redistribute it and/or modify        ###
+###     it under the terms of the GNU General Public License as published by        ###
+###     the Free Software Foundation, either version 3 of the License, or           ###
+###     (at your option) any later version.                                         ###
+###                                                                                 ###
+###     This program is distributed in the hope that it will be useful,             ###
+###     but WITHOUT ANY WARRANTY; without even the implied warranty of              ###
+###     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               ###
+###     GNU General Public License for more details.                                ###
+###                                                                                 ###
+###     You should have received a copy of the GNU General Public License           ###
+###     along with this program. If not, see <http://www.gnu.org/licenses/>.        ###
+###                                                                                 ###
+#######################################################################################
+
 import os
 import sys, getopt
 from sklearn.ensemble import RandomForestClassifier
@@ -16,7 +38,9 @@ import multiprocessing
 
 ### GLOBALS ###
 global BLAST
-nHits = []; maxCover = []; averCover = []; medianCover = []; varCover = []; firstHit = []; IDs = []; GC = []; cSize = []
+nHits = []; maxCover = []; averCover = []; medianCover = []; varCover = []; firstHit = []; IDs = []; GC = []; cSize = [];
+global attributed_IDs, attributed_identities
+attributed_IDs = []; attributed_identities = [];
 plasforest = pickle.load(open("plasforest.sav","rb"))
 prediction = [];
 
@@ -60,7 +84,7 @@ def main(argv):
                 sys.exit()
             outputfile = inputfile+".csv"
         elif opt in ("-o", "--output"):
-            print(outputfile)
+            outputfile=arg
             if not arg.endswith(".csv"):
                 print('./PlasForest.py -i <inputfile> -o <outputfile>')
                 print('Error: output file is a column-separated file.')
@@ -75,13 +99,19 @@ def main(argv):
     tmp_fasta = inputfile+"_tmp.fasta"
     blast_table = inputfile+"_blast.out"
     list_records = seq_checker(inputfile, tmp_fasta, verbose)
-    blast_launcher(tmp_fasta, blast_table, verbose)
-    features = get_features(list_records, blast_table, firsthits, verbose)
-    finalfile = plasforest_predict(features, showFeatures, firsthits, verbose)
+    if(os.path.isfile(tmp_fasta)):
+        blast_launcher(tmp_fasta, blast_table, verbose)
+        features = get_features(list_records, blast_table, firsthits, verbose)
+        finalfile = plasforest_predict(features, showFeatures, firsthits, verbose, attributed_IDs, attributed_identities)
+    else:
+        if verbose: print("Contig descriptions already mentioned their identities.")
+        finalfile = pd.DataFrame({"ID":attributed_IDs, "Prediction":attributed_identities})
+    
     finalfile.to_csv(os.path.abspath(outputfile), sep=',', encoding='utf-8', index=False)
-    os.remove(tmp_fasta)
-    os.remove(blast_table)
-    if verbose: print("Temporary files are deleted.")
+    if(os.path.isfile(tmp_fasta)):
+        os.remove(tmp_fasta)
+        os.remove(blast_table)
+        if verbose: print("Temporary files are deleted.")
     print('Predictions are printed in '+outputfile)
 
 ### CHECK WHICH SEQUENCES NEED TO BE CHECKED ###
@@ -89,6 +119,7 @@ def seq_checker(inputfile, tmp_fasta, verbose):
     nb_seqs_analyze = 0
     list_records = []
     words_to_eliminate = ["plasmid", "chromosome", "Plasmid", "Chromosome"]
+    words_plasmid = ["plasmid","Plasmid"]
     with open(inputfile, "r+") as handle:
         for record in SeqIO.parse(handle, "fasta"):
             if all(word not in str(record.id) for word in words_to_eliminate) and all(word not in str(record.description) for word in words_to_eliminate):
@@ -96,6 +127,13 @@ def seq_checker(inputfile, tmp_fasta, verbose):
                 list_records.append(record)
                 with open(tmp_fasta,"a+") as tmp:
                     SeqIO.write(record, tmp, "fasta")
+            else:
+                attributed_IDs.append(str(record.id))
+                if any(word in str(record.id) for word in words_plasmid) or any(word in str(record.description) for word in words_plasmid):
+                    attributed_identities.append("Plasmid")
+                else:
+                    attributed_identities.append("Chromosome")
+                
     if verbose: print(str(nb_seqs_analyze)+" contigs will be analyzed by PlasForest.")
     return list_records
 
@@ -148,7 +186,7 @@ def get_blast_feature(ID,idBLAST, firsthits):
             firstHit.append("NA")
 
 ### PREDICT WITH PLASFOREST ###
-def plasforest_predict(features, showFeatures, firsthits, verbose):
+def plasforest_predict(features, showFeatures, firsthits, verbose, attributed_IDs, attributed_identities):
     if verbose: print("Starting predictions with the random forest classifier...")
     temp_table = features[["G+C content","Contig size","Number of hits","Maximum coverage","Median coverage","Average coverage","Variance of coverage"]]
     nthreads=os.cpu_count()
@@ -165,6 +203,9 @@ def plasforest_predict(features, showFeatures, firsthits, verbose):
     else:
         finalfile=pd.DataFrame({"ID":features["ID"], "Prediction":wordy_prediction})
     if verbose: print("Predictions made!")
+    if len(attributed_IDs)>0:
+        attributed_df = pd.DataFrame({"ID":attributed_IDs, "Prediction":attributed_identities})
+        finalfile = pd.concat([finalfile, attributed_df])
     return(finalfile)
 
 def make_prediction(temp_table):
