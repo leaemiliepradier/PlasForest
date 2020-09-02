@@ -33,26 +33,31 @@ from Bio.Seq import Seq
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio import SeqUtils
 from Bio.SeqRecord import SeqRecord
-from joblib import Parallel, delayed
-import multiprocessing
+from multiprocessing import Pool
+
 
 ### GLOBALS ###
-global BLAST
-nHits = []; maxCover = []; averCover = []; medianCover = []; varCover = []; firstHit = []; IDs = []; GC = []; cSize = [];
 global attributed_IDs, attributed_identities
 attributed_IDs = []; attributed_identities = [];
-plasforest = pickle.load(open("plasforest.sav","rb"))
-prediction = [];
 
 ### MAIN ###
 def main(argv):
     inputfile = ""
     outputfile = ""
-    firsthits = False
+    besthits = False
     showFeatures = False
     verbose = False
     print("PlasForest: a homology-based random forest classifier for plasmid identification.")
     print("(C) Lea Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier, Stephanie Bedhomme. 2020.")
+    if not os.path.isfile("plasforest.sav"):
+        print("Error: plasforest.sav is not in the directory.")
+        if os.path.isfile("plasforest.sav.tar.gz"):
+            print("Please decompress plasforest.sav.tar.gz before launching PlasForest.")
+        sys.exit(2)
+    if not os.path.isfile("plasmid_refseq.fasta"):
+        print("Error: plasmid_refseq.fasta is not in the directory.")
+        print("Please execute ./database_downloader.sh before launching PlasForest.")
+        sys.exit(2)
     try:
         opts, args = getopt.getopt(argv,"hi:o:bfv", ["help","input","output"])
     except getopt.GetoptError:
@@ -90,7 +95,7 @@ def main(argv):
                 print('Error: output file is a column-separated file.')
                 sys.exit()
         elif opt=="-b":
-            firsthits = True
+            besthits = True
         elif opt=="-f":
             showFeatures = True
         elif opt=="-v":
@@ -101,8 +106,8 @@ def main(argv):
     list_records = seq_checker(inputfile, tmp_fasta, verbose)
     if(os.path.isfile(tmp_fasta)):
         blast_launcher(tmp_fasta, blast_table, verbose)
-        features = get_features(list_records, blast_table, firsthits, verbose)
-        finalfile = plasforest_predict(features, showFeatures, firsthits, verbose, attributed_IDs, attributed_identities)
+        features = get_features(list_records, blast_table, verbose)
+        finalfile = plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities)
     else:
         if verbose: print("Contig descriptions already mentioned their identities.")
         finalfile = pd.DataFrame({"ID":attributed_IDs, "Prediction":attributed_identities})
@@ -146,72 +151,75 @@ def blast_launcher(tmp_fasta, blast_table, verbose):
     if verbose: print("BLASTn is over!")
 
 ### GET FEATURES ###
-def get_features(list_records, blast_table, firsthits, verbose):
+def get_features(list_records, blast_table, verbose):
     if verbose: print("Computing the features")
     nthreads=os.cpu_count()
-    Parallel(n_jobs = nthreads, require='sharedmem')(delayed(get_seq_feature)(record) for record in list_records)
-    BLAST = pd.read_table(blast_table, sep='\t', header=None, names=['qseqid','sseqid','pident','length','mismatch','gapopen','qstart','qend', 'sstart','send','evalue','bitscore'])
-    Parallel(n_jobs = nthreads, require='sharedmem')(delayed(get_blast_feature)(ID, BLAST[BLAST["qseqid"].astype(str)==ID], firsthits) for ID in IDs)
-    maxCoverage = [float(x)/float(y) for x,y in zip(maxCover, cSize)]
-    medianCoverage = [float(x)/float(y) for x,y in zip(medianCover, cSize)]
-    averCoverage = [float(x)/float(y) for x,y in zip(averCover, cSize)]
-    varCoverage = [float(x)/(float(y)*float(y)) for x,y in zip(varCover, cSize)]
-    if firsthits:
-        features = pd.DataFrame({"ID":IDs,"G+C content":GC,"Contig size":cSize,"Number of hits":nHits,"Maximum coverage":maxCoverage,"Median coverage":medianCoverage,"Average coverage":averCoverage,"Variance of coverage":varCoverage, "First hit":firstHit})
-    else:
-        features = pd.DataFrame({"ID":IDs,"G+C content":GC,"Contig size":cSize,"Number of hits":nHits,"Maximum coverage":maxCoverage,"Median coverage":medianCoverage,"Average coverage":averCoverage,"Variance of coverage":varCoverage})
+    pool = Pool(nthreads, read_blast, [blast_table])
+    seqFeatures = pd.concat(pool.map(get_seq_feature, list_records))
+    blastFeatures = pd.concat(pool.map(get_blast_feature, seqFeatures["ID"].unique().tolist()))
+    pool.close()
+    pool.join()
+    features = pd.merge(seqFeatures, blastFeatures, on="ID")
+    features[["Maximum coverage", "Median coverage","Average coverage"]] = features[["Maximum coverage", "Median coverage","Average coverage"]].div(features["Contig size"], axis="index")
+    features["Variance of coverage"] = features["Variance of coverage"].div(features["Contig size"], axis="index").div(features["Contig size"], axis="index")
     return(features)
 
-def get_seq_feature(record):
-    IDs.append(str(record.id))
-    GC.append(float(SeqUtils.GC(record.seq)))
-    cSize.append(len(str(record.seq)))
+def read_blast(blast_table):
+    global BLAST
+    BLAST = pd.read_table(blast_table, sep='\t', header=None, names=['qseqid','sseqid','pident','length','mismatch','gapopen','qstart','qend', 'sstart','send','evalue','bitscore'])
 
-def get_blast_feature(ID,idBLAST, firsthits):
-    nHits.append(len(idBLAST.index))
-    if len(idBLAST.index) > 0:
-        maxCover.append(max(idBLAST["length"]))
-        averCover.append(np.mean(idBLAST["length"]))
-        medianCover.append(np.median(idBLAST["length"]))
-        varCover.append(np.var(idBLAST["length"]))
-        if firsthits:
-            theFirstHit = idBLAST[idBLAST["length"]==max(idBLAST["length"])]
-            firstHit.append(theFirstHit["sseqid"].unique().tolist()[0])
-    else:
-        maxCover.append(0)
-        averCover.append(0)
-        medianCover.append(0)
-        varCover.append(0)
-        if firsthits:
-            firstHit.append("NA")
+def get_seq_feature(record):
+    return(pd.DataFrame({"ID":[str(record.id)], "G+C content":[float(SeqUtils.GC(record.seq))], "Contig size":[len(str(record.seq))]}))
+
+def get_blast_feature(ID):
+    idBLAST = BLAST[BLAST["qseqid"].astype(str)==ID]
+    maxCover=0; averCover=0; medianCover=0; varCover=0; bestHit="NA"
+    nHits=len(idBLAST.index)
+    if nHits > 0:
+        maxCover=max(idBLAST["length"])
+        averCover = np.mean(idBLAST["length"])
+        medianCover = np.median(idBLAST["length"])
+        varCover = np.var(idBLAST["length"])
+        theBestHit = idBLAST[idBLAST["length"]==max(idBLAST["length"])]
+        bestHit = theBestHit["sseqid"].unique().tolist()[0]
+    return(pd.DataFrame({"ID":[ID],"Number of hits":[nHits],"Maximum coverage":[maxCover],"Median coverage":[medianCover],"Average coverage":[averCover],"Variance of coverage":[varCover],"Best hit":[bestHit]}))
 
 ### PREDICT WITH PLASFOREST ###
-def plasforest_predict(features, showFeatures, firsthits, verbose, attributed_IDs, attributed_identities):
+def plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities):
     if verbose: print("Starting predictions with the random forest classifier...")
-    temp_table = features[["G+C content","Contig size","Number of hits","Maximum coverage","Median coverage","Average coverage","Variance of coverage"]]
     nthreads=os.cpu_count()
-    Parallel(n_jobs = nthreads, require='sharedmem')(delayed(make_prediction)(row) for index, row in temp_table.iterrows())
+    pool = Pool(nthreads, import_plasforest, ())
+    predictions = pd.concat(pool.map(make_prediction, features.iterrows()))
+    pool.close()
+    pool.join()
+    features = pd.merge(features, predictions, on="ID")
     wordy_prediction = []
-    for p in prediction:
-        if p==0: wordy_prediction.append("Chromosome")
+    for index, row in features.iterrows():
+        if row["num_predict"]==0: wordy_prediction.append("Chromosome")
         else: wordy_prediction.append("Plasmid")
+    features["Prediction"] = wordy_prediction
+    features = features.drop(columns=["num_predict"])
     if showFeatures:
-        features["Prediction"] = pd.Series(wordy_prediction, index=features.index)
         finalfile=features
-    elif firsthits:
-        finalfile=pd.DataFrame({"ID":features["ID"], "Prediction":wordy_prediction, "Best hit": features["First hit"]})
+    elif besthits:
+        finalfile=features[["ID","Prediction", "Best hit"]]
     else:
-        finalfile=pd.DataFrame({"ID":features["ID"], "Prediction":wordy_prediction})
+        finalfile=features[["ID","Prediction"]]
     if verbose: print("Predictions made!")
     if len(attributed_IDs)>0:
         attributed_df = pd.DataFrame({"ID":attributed_IDs, "Prediction":attributed_identities})
         finalfile = pd.concat([finalfile, attributed_df])
     return(finalfile)
 
-def make_prediction(temp_table):
-    topredict = temp_table.to_frame().T
-    pre = plasforest.predict(topredict)
-    prediction.append(pre)
+def import_plasforest():
+    global plasforest
+    plasforest = pickle.load(open("plasforest.sav","rb"))
+
+def make_prediction(args):
+    index, row = args
+    topredict = row.to_frame().T
+    topredict = topredict[["G+C content","Contig size","Number of hits","Maximum coverage","Median coverage","Average coverage","Variance of coverage"]]
+    return(pd.DataFrame({"ID":[row["ID"]], "num_predict": plasforest.predict(topredict)}))
 
 
 ### EXECUTE MAIN ###
