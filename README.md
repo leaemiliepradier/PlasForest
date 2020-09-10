@@ -1,5 +1,5 @@
 # PlasForest
-A random forest classifier of contigs to identify contigs of plasmid origin in draft genomes
+A random forest classifier of contigs to identify contigs of plasmid origin in contig and scaffold genomes
 
 ## Dependencies
 - Python 3.6+
