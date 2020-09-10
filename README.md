@@ -40,6 +40,13 @@ The use of PlasForest requires to download a database of plasmid sequences (2.5G
 ````
 $ ./database_downloader.sh
 ````
+### Testing the installation
+To test that PlasForest has been correctly installed, you can run the pipeline on the test dataset:
+````
+$ python PlasForest.py -i test.fasta
+````
+which should output ```test.fasta.csv``` without error.
+
 ## Manual
 The PlasForest pipeline is able to process 2000 contigs (~100 genomes) in about 20 minutes on a computer with 6 CPUs and 16GB of RAM.
 ### Minimal use
