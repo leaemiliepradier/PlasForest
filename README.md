@@ -58,3 +58,6 @@ Option ```-b``` will add a third column to the output file, with the identificat
 Option ```-f``` will add seven columns to the output file, with the features measured for each contig.
 
 Option ```-v```can activate verbose mode.
+
+## Support
+Any issues connected with PlasForest should be addressed to Léa Pradier (lea.pradier (at) cefe.cnrs.fr).
