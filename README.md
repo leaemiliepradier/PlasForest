@@ -33,11 +33,13 @@ $ export PATH=$HOME/ncbi-blast-2.10.1+/bin:$PATH
 
 Untar the random forest classifier:
 ````
-$ cd PlasForest/
+$ cd PlasForest-master/
 $ tar -zxvf plasforest.sav.tar.gz
 ````
 The use of PlasForest requires to download a database of plasmid sequences (2.5GB). This script should be launched from the directory in which ```PlasForest.py``` and ```plasforest.sav``` are stored:
+
 ````
+$ chmod 755 database_downloader.sh
 $ ./database_downloader.sh
 ````
 ### Testing the installation
