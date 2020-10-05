@@ -72,5 +72,11 @@ Option ```-r``` will allow to re-assign contigs that are already described as pl
 
 Option ```--threads``` allows to define the number of CPUs on which PlasForest will be run.
 
+# Citation
+If you use PlasForest for your research, please cite the following papers:
+- Pradier L, Tissot T, Fiston-Lavier AS, Bedhomme S (2020). PlasForest: a homology-based random forest classifier for plasmid detection in genomic datasets. Available from https://github.com/leaemiliepradier/PlasForest
+- Camacho C, Coulouris G, Avagyan V, Ma N, Papadopoulos J, Bealer K, Madden TL (2009) BLAST+: architecture and applications. BMC Bioinformatics 10:421
+- Cock PJA, Antao T, Chang JT, Chapman BA, Cox CJ, Dalke A, Freidberg I, Hamelryck T, Kauff F, Wilczynski B, de Hoon MJL (2009) Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics 25:1422-1423
+
 ## Support
 Any issues connected with PlasForest should be addressed to Léa Pradier (lea.pradier (at) cefe.cnrs.fr).
