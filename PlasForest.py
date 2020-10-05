@@ -47,6 +47,8 @@ def main(argv):
     besthits = False
     showFeatures = False
     verbose = False
+    reattribute = False
+    nthreads = 1
     print("PlasForest: a homology-based random forest classifier for plasmid identification.")
     print("(C) Lea Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier, Stephanie Bedhomme. 2020.")
     if not os.path.isfile("plasforest.sav"):
@@ -59,7 +61,7 @@ def main(argv):
         print("Please execute ./database_downloader.sh before launching PlasForest.")
         sys.exit(2)
     try:
-        opts, args = getopt.getopt(argv,"hi:o:bfv", ["help","input","output"])
+        opts, args = getopt.getopt(argv,"hi:o:bfvr:", ["help","input=","output=","threads="])
     except getopt.GetoptError:
         print('./PlasForest.py -i <inputfile> -o <outputfile>')
         print('\t -i, --input <inputfile>: a FASTA input file')
@@ -67,6 +69,8 @@ def main(argv):
         print('List of options:')
         print('\t -b: show best hit from the plasmid database for each contig')
         print('\t -f: keep the features used by the classifier in the output')
+        print('\t --threads <number of threads>: number of threads (default: 1)')
+        print('\t -r: reattribute contigs which are already described as plasmid or chromosome')
         print('\t -v: verbose mode')
         print('\t -h, --help: show this message and quit')
         sys.exit(2)
@@ -78,6 +82,8 @@ def main(argv):
             print('List of options:')
             print('\t -b: show best hit from the plasmid database for each contig')
             print('\t -f: keep the features used by the classifier in the output')
+            print('\t --threads <number of threads>: number of threads (default: 1)')
+            print('\t -r: reassign contigs which are already described as plasmid or chromosome')
             print('\t -v: verbose mode')
             print('\t -h, --help: show this message and quit')
             sys.exit()
@@ -94,20 +100,24 @@ def main(argv):
                 print('./PlasForest.py -i <inputfile> -o <outputfile>')
                 print('Error: output file is a column-separated file.')
                 sys.exit()
+        elif opt=="--threads":
+            nthreads = arg
         elif opt=="-b":
             besthits = True
         elif opt=="-f":
             showFeatures = True
+        elif opt=="-r":
+            reattribute = True
         elif opt=="-v":
             verbose = True
     if verbose: print("Applying PlasForest on "+inputfile+".")
     tmp_fasta = inputfile+"_tmp.fasta"
     blast_table = inputfile+"_blast.out"
-    list_records = seq_checker(inputfile, tmp_fasta, verbose)
+    list_records = seq_checker(inputfile, tmp_fasta, verbose, reattribute)
     if(os.path.isfile(tmp_fasta)):
-        blast_launcher(tmp_fasta, blast_table, verbose)
-        features = get_features(list_records, blast_table, verbose)
-        finalfile = plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities)
+        blast_launcher(tmp_fasta, blast_table, verbose, nthreads)
+        features = get_features(list_records, blast_table, verbose, nthreads)
+        finalfile = plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities, nthreads)
     else:
         if verbose: print("Contig descriptions already mentioned their identities.")
         finalfile = pd.DataFrame({"ID":attributed_IDs, "Prediction":attributed_identities})
@@ -120,7 +130,7 @@ def main(argv):
     print('Predictions are printed in '+outputfile)
 
 ### CHECK WHICH SEQUENCES NEED TO BE CHECKED ###
-def seq_checker(inputfile, tmp_fasta, verbose):
+def seq_checker(inputfile, tmp_fasta, verbose, reattribute):
     nb_seqs_analyze = 0
     list_records = []
     words_to_eliminate = ["plasmid", "chromosome", "Plasmid", "Chromosome"]
@@ -133,28 +143,32 @@ def seq_checker(inputfile, tmp_fasta, verbose):
                 with open(tmp_fasta,"a+") as tmp:
                     SeqIO.write(record, tmp, "fasta")
             else:
-                attributed_IDs.append(str(record.id))
-                if any(word in str(record.id) for word in words_plasmid) or any(word in str(record.description) for word in words_plasmid):
-                    attributed_identities.append("Plasmid")
+                if reattribute:
+                    nb_seqs_analyze+=1
+                    list_records.append(record)
+                    with open(tmp_fasta,"a+") as tmp:
+                        SeqIO.write(record, tmp, "fasta")
                 else:
-                    attributed_identities.append("Chromosome")
+                    attributed_IDs.append(str(record.id))
+                    if any(word in str(record.id) for word in words_plasmid) or any(word in str(record.description) for word in words_plasmid):
+                        attributed_identities.append("Plasmid")
+                    else:
+                        attributed_identities.append("Chromosome")
                 
     if verbose: print(str(nb_seqs_analyze)+" contigs will be analyzed by PlasForest.")
     return list_records
 
 ### BLAST LAUNCHER ###
-def blast_launcher(tmp_fasta, blast_table, verbose):
-    nthreads=os.cpu_count()
+def blast_launcher(tmp_fasta, blast_table, verbose, nthreads):
     blastn_cline = NcbiblastnCommandline(query = tmp_fasta, db = "plasmid_refseq.fasta", evalue = 0.001, outfmt = 6, out = blast_table, num_threads=nthreads)
     if verbose: print("Starting BLASTn...")
     stdout, stderr = blastn_cline()
     if verbose: print("BLASTn is over!")
 
 ### GET FEATURES ###
-def get_features(list_records, blast_table, verbose):
+def get_features(list_records, blast_table, verbose, nthreads):
     if verbose: print("Computing the features")
-    nthreads=os.cpu_count()
-    pool = Pool(nthreads, read_blast, [blast_table])
+    pool = Pool(int(nthreads), read_blast, [blast_table])
     seqFeatures = pd.concat(pool.map(get_seq_feature, list_records))
     blastFeatures = pd.concat(pool.map(get_blast_feature, seqFeatures["ID"].unique().tolist()))
     pool.close()
@@ -185,10 +199,9 @@ def get_blast_feature(ID):
     return(pd.DataFrame({"ID":[ID],"Number of hits":[nHits],"Maximum coverage":[maxCover],"Median coverage":[medianCover],"Average coverage":[averCover],"Variance of coverage":[varCover],"Best hit":[bestHit]}))
 
 ### PREDICT WITH PLASFOREST ###
-def plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities):
+def plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities, nthreads):
     if verbose: print("Starting predictions with the random forest classifier...")
-    nthreads=os.cpu_count()
-    pool = Pool(nthreads, import_plasforest, ())
+    pool = Pool(int(nthreads), import_plasforest, ())
     predictions = pd.concat(pool.map(make_prediction, features.iterrows()))
     pool.close()
     pool.join()
