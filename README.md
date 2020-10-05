@@ -66,7 +66,9 @@ Option ```-f``` will add seven columns to the output file, with the features mea
 
 Option ```-v``` can activate verbose mode.
 
-Option ```-r``` will allow to re-assign contigs that are already described as plasmid or chromosom.
+Option ```-r``` will allow to re-assign contigs that are already described as plasmid or chromosome.
+
+Option ```--threads``` allows to define the number of CPUs on which PlasForest will be run.
 
 ## Support
 Any issues connected with PlasForest should be addressed to Léa Pradier (lea.pradier (at) cefe.cnrs.fr).
