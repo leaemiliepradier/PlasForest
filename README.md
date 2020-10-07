@@ -45,7 +45,7 @@ $ ./database_downloader.sh
 ### Testing the installation
 To test that PlasForest has been correctly installed, you can run the pipeline on the test dataset:
 ````
-$ python PlasForest.py -i test.fasta
+$ python3 PlasForest.py -i test.fasta
 ````
 which should output ```test.fasta.csv``` without error.
 
@@ -54,11 +54,11 @@ The PlasForest pipeline is able to process 2000 contigs (~100 genomes) in about 
 ### Minimal use
 PlasForest requires at least an input FASTA file, and generates an column-separated output file.
 ````
-$ python PlasForest.py -i /path/to/your/inputfile.fasta
+$ python3 PlasForest.py -i /path/to/your/inputfile.fasta
 ````
 You can also specify the name of the output file.
 ````
-$ python PlasForest.py -i /path/to/your/inputfile.fasta -o /path/to/your/outputfile.csv
+$ python3 PlasForest.py -i /path/to/your/inputfile.fasta -o /path/to/your/outputfile.csv
 ````
 
 ### Additional options
