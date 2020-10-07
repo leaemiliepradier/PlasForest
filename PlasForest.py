@@ -176,7 +176,7 @@ def get_features(list_records, blast_table, verbose, nthreads):
 
 def read_blast(blast_table):
     global BLAST
-    BLAST = pd.read_table(blast_table, sep='\t', header=None, names=['qseqid','sseqid','pident','length','mismatch','gapopen','qstart','qend', 'sstart','send','evalue','bitscore'])
+    BLAST = pd.read_csv(blast_table, sep='\t', header=None, names=['qseqid','sseqid','pident','length','mismatch','gapopen','qstart','qend', 'sstart','send','evalue','bitscore'])
 
 def get_seq_feature(record):
     return(pd.DataFrame({"ID":[str(record.id)], "G+C content":[float(SeqUtils.GC(record.seq))], "Contig size":[len(str(record.seq))]}))
