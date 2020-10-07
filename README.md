@@ -36,8 +36,7 @@ Untar the random forest classifier:
 $ cd PlasForest-master/
 $ tar -zxvf plasforest.sav.tar.gz
 ````
-The use of PlasForest requires to download a database of plasmid sequences (2.5GB). This script should be launched from the directory in which ```PlasForest.py``` and ```plasforest.sav``` are stored:
-
+The use of PlasForest requires to download a database of plasmid sequences (2.5GB). This script should be launched from the directory in which ```PlasForest.py``` and ```plasforest.sav``` are stored. Be careful this step may take a while.
 ````
 $ chmod 755 database_downloader.sh
 $ ./database_downloader.sh
