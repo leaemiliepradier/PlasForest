@@ -96,10 +96,6 @@ def main(argv):
             outputfile = inputfile+".csv"
         elif opt in ("-o", "--output"):
             outputfile=arg
-            if not arg.endswith(".csv"):
-                print('./PlasForest.py -i <inputfile> -o <outputfile>')
-                print('Error: output file is a column-separated file.')
-                sys.exit()
         elif opt=="--threads":
             nthreads = arg
         elif opt=="-b":
