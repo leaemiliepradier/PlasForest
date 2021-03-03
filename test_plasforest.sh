@@ -40,7 +40,7 @@ echo -en "\r${BLUE}Checking if all the files are here.... ${GREEN}OK\n"
 
 sleep 1
 echo -en "\r${BLUE}We now run PlasForest on the test dataset..."
-python3.6 PlasForest.py -i test.fasta > silent_plasforest.tmp
+python PlasForest.py -i test.fasta > silent_plasforest.tmp
 rm silent_plasforest.tmp
 STATUS="$(cmp --silent test.fasta.csv test_results.csv; echo $?)"
 if [[ $STATUS -ne 0 ]]; then
