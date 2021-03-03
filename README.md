@@ -42,11 +42,11 @@ $ chmod 755 database_downloader.sh
 $ ./database_downloader.sh
 ````
 ### Testing the installation
-To test that PlasForest has been correctly installed, you can run the pipeline on the test dataset:
+To test that PlasForest has been correctly installed, you can run the following script:
 ````
-$ python3 PlasForest.py -i test.fasta
+$ ./test_plasforest.sh
 ````
-which should output ```test.fasta.csv``` without error.
+which will test if all required files are here and will run PlasForest on a test dataset.
 
 ## Manual
 The PlasForest pipeline is able to process 2000 contigs (~100 genomes) in about 20 minutes on a computer with 6 CPUs and 16GB of RAM.
