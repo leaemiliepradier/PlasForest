@@ -73,9 +73,9 @@ Option ```--threads <int>``` allows to define the number of CPUs on which PlasFo
 
 Option ```--size_of_batch <int>``` alows to define ow many sequences can be used in the single batch.
 
-### Training PlasForest on new data
-The classifier is already provided for PlasForest and there is no need to train it again.
-However, if you want to train PlasForest on a custom training dataset and/or using a custom plasmid database, you can do it by using ```train_plasforest.py```.
+### Training PlasForest on custom data
+The classifier is already provided for PlasForest and there is no need to train it again. However, if you want to train PlasForest on a custom training dataset and/or using a custom plasmid database, you can do it by using ```train_plasforest.py```.
+
 This pipeline requires you to provide an input FASTA file for your training set, a CSV file containing the labels for each sequence of the training set, and the output name for your custom classifier:
 ````
 $ python3 train_plasforest.py -i /path/to/your/trainingset.fasta -l /path/to/your/labelfile.csv -o /path/to/your/output_classifier.sav
