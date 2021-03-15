@@ -49,7 +49,7 @@ $ ./test_plasforest.sh
 which will test if all required files are here and will run PlasForest on a test dataset.
 
 ## Manual
-The PlasForest pipeline is able to process 2000 contigs (~100 genomes) in about 20 minutes on a computer with 6 CPUs and 16GB of RAM.
+The PlasForest pipeline is able to process 1000 contigs (~50 genomes) in about 8 minutes using 1 CPU and 2.3 GB of memory. Using 16 CPUs, it will take only 2 minutes, but will require 20 GB of memory.
 ### Minimal use
 PlasForest requires at least an input FASTA file, and generates an column-separated output file.
 ````
@@ -69,10 +69,23 @@ Option ```-v``` can activate verbose mode.
 
 Option ```-r``` will allow to re-assign contigs that are already described as plasmid or chromosome.
 
-Option ```--threads``` allows to define the number of CPUs on which PlasForest will be run.
+Option ```--threads <int>``` allows to define the number of CPUs on which PlasForest will be run.
 
-Option ```--size_of_batch``` alows to define ow many sequences can be used in the single batch.
+Option ```--size_of_batch <int>``` alows to define ow many sequences can be used in the single batch.
 
+### Training PlasForest on new data
+The classifier is already provided for PlasForest and there is no need to train it again.
+However, if you want to train PlasForest on a custom training dataset and/or using a custom plasmid database, you can do it by using ```train_plasforest.py```.
+This pipeline requires you to provide an input FASTA file for your training set, a CSV file containing the labels for each sequence of the training set, and the output name for your custom classifier:
+````
+$ python3 train_plasforest.py -i /path/to/your/trainingset.fasta -l /path/to/your/labelfile.csv -o /path/to/your/output_classifier.sav
+````
+Make sure that your label file has two columns: one named "ID" containing all the identifiers of your training set sequences; and the other names "Plasmid" taking the values 0 if a sequence comes from a chromosome and 1 if it comes from a plasmid.
+
+Optionally, you can also
+- run in verbose mode with option ```-v```
+- specify a custom plasmid database with option ```--database <BLAST+ db>```
+- define the number of CPUs on which the training will be run with option ```--threads <int>```
 
 # Citation
 If you use PlasForest for your research, please cite the following papers:
