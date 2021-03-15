@@ -71,6 +71,9 @@ Option ```-r``` will allow to re-assign contigs that are already described as pl
 
 Option ```--threads``` allows to define the number of CPUs on which PlasForest will be run.
 
+Option ```--size_of_batch``` alows to define ow many sequences can be used in the single batch.
+
+
 # Citation
 If you use PlasForest for your research, please cite the following papers:
 - Pradier L, Tissot T, Fiston-Lavier AS, Bedhomme S (2020). PlasForest: a homology-based random forest classifier for plasmid detection in genomic datasets. bioRxiv 2020.10.05.326819; doi: https://doi.org/10.1101/2020.10.05.326819
