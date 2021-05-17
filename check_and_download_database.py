@@ -39,7 +39,7 @@ def check_missing():
                 list_downloaded.append(record.id)
         list_missing = [x for x in list_ids if x not in list_downloaded]
     else:
-        list_missing = list_downloaded
+        list_missing = list_ids
     return list_missing
 
 
