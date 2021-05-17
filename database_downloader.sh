@@ -38,5 +38,14 @@ while true; do
 done
 
 cd $PFdirectory
+while true; do
+    ntheoseq=$(wc -l < list_ids.txt)
+    nseq=$(grep -o ">" plasmid_refseq.fasta | wc -l)
+    if [ $nseq -lt $ntheoseq ]; then
+        python3 check_and_download_database.py check
+    else
+        break
+    fi
+done
 makeblastdb -in plasmid_refseq.fasta -dbtype nucl -parse_seqids
 

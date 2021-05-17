@@ -134,7 +134,7 @@ def main(argv):
             finalfile = plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities, nthreads)
             os.remove(tmp_fasta)
             os.remove(blast_table)
-        if verbose: print("Temporary files are deleted.")
+            if verbose: print("Temporary files are deleted.")
         else:
             if verbose: print("Contig descriptions already mentioned their identities.")
             finalfile = pd.DataFrame({"ID":attributed_IDs, "Prediction":attributed_identities})
