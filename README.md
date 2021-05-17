@@ -41,6 +41,8 @@ The use of PlasForest requires to download a database of plasmid sequences (2.5G
 $ chmod 755 database_downloader.sh
 $ ./database_downloader.sh
 ````
+This script might have trouble downloading all the sequences for the database. In case it happens, it will try to download the remaining sequences from NCBI Entrez, and it will ask you a valid email address to do so.
+
 ### Testing the installation
 To test that PlasForest has been correctly installed, you can run the following script:
 ````
