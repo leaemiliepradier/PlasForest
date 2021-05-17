@@ -40,8 +40,6 @@ The use of PlasForest requires to download a database of plasmid sequences (2.5G
 ````
 $ chmod 755 database_downloader.sh
 $ ./database_downloader.sh
-# or alternatively
-$ python check_and_download_database.py download
 ````
 ### Testing the installation
 To test that PlasForest has been correctly installed, you can run the following script:
