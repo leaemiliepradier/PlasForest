@@ -1,5 +1,7 @@
 # PlasForest
-A random forest classifier of contigs to identify contigs of plasmid origin in contig and scaffold genomes
+A random forest classifier of contigs to identify contigs of plasmid origin in contig and scaffold genomes.
+
+PlasForest has been published in *BMC Bioinformatics* (https://doi.org/10.1186/s12859-021-04270-w). On a test dataset, it was measured to detect 92.7% of contigs of plasmid origin, for only 2.7% false positives.
 
 ## Dependencies
 - Python 3.6+
@@ -91,9 +93,9 @@ Optionally, you can also
 
 # Citation
 If you use PlasForest for your research, please cite the following papers:
-- Pradier L, Tissot T, Fiston-Lavier AS, Bedhomme S (2020). PlasForest: a homology-based random forest classifier for plasmid detection in genomic datasets. bioRxiv 2020.10.05.326819; doi: https://doi.org/10.1101/2020.10.05.326819
-- Camacho C, Coulouris G, Avagyan V, Ma N, Papadopoulos J, Bealer K, Madden TL (2009) BLAST+: architecture and applications. BMC Bioinformatics 10:421
-- Cock PJA, Antao T, Chang JT, Chapman BA, Cox CJ, Dalke A, Freidberg I, Hamelryck T, Kauff F, Wilczynski B, de Hoon MJL (2009) Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics 25:1422-1423
+- Pradier L, Tissot T, Fiston-Lavier AS, Bedhomme S (2021). PlasForest: a homology-based random forest classifier for plasmid detection in genomic datasets. BMC Bioinformatics 22, 349; doi: https://doi.org/10.1186/s12859-021-04270-w
+- Camacho C, Coulouris G, Avagyan V, Ma N, Papadopoulos J, Bealer K, Madden TL (2009). BLAST+: architecture and applications. BMC Bioinformatics 10:421
+- Cock PJA, Antao T, Chang JT, Chapman BA, Cox CJ, Dalke A, Freidberg I, Hamelryck T, Kauff F, Wilczynski B, de Hoon MJL (2009). Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics 25:1422-1423
 
 ## Support
 Any issues connected with PlasForest should be addressed to Léa Pradier (lea.pradier (at) cefe.cnrs.fr).
