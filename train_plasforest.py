@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #######################################################################################
 ###                                                                                 ###
 ###     PlasForest 1.2                                                              ###
-###     Copyright (C) 2020  L?a Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier,  ###
-###                         St?phanie Bedhomme. (leaemiliepradier@gmail.com)        ###
+###     Copyright (C) 2020  Léa Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier,  ###
+###                         Stéphanie Bedhomme. (leaemiliepradier@gmail.com)        ###
 ###                                                                                 ###
 ###     This program is free software: you can redistribute it and/or modify        ###
 ###     it under the terms of the GNU General Public License as published by        ###
