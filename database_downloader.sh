@@ -27,25 +27,16 @@ git clone https://github.com/StuntsPT/NCBI_Mass_Downloader
 cd NCBI_Mass_Downloader
 echo "The database is about to be downloaded."
 echo "This may take a while."
-while true; do
-    python3 NCBI_downloader.py -q '(bacteria[filter] AND biomol_genomic[PROP] AND refseq[filter] AND is_nuccore[filter] AND plasmid[filter]) AND ("0001/01/01"[PDAT] : "2019/09/01"[PDAT])' -d "nucleotide" -o ${PFdirectory}/plasmid_refseq.fasta
-    if test -f ${PFdirectory}/plasmid_refseq.fasta; then
-        if [ $(grep -o ">" ${PFdirectory}/plasmid_refseq.fasta | wc -l) -ge 35000 ]; then
-            break
-        fi
-    fi
-    rm ${PFdirectory}/plasmid_refseq.fasta
-done
+python3 NCBI_downloader.py -q '(bacteria[filter] AND biomol_genomic[PROP] AND refseq[filter] AND is_nuccore[filter] AND plasmid[filter]) AND ("0001/01/01"[PDAT] : "2019/09/01"[PDAT])' -d "nucleotide" -o ${PFdirectory}/plasmid_refseq.fasta
 
 cd $PFdirectory
-while true; do
-    ntheoseq=$(wc -l < list_ids.txt)
-    nseq=$(grep -o ">" plasmid_refseq.fasta | wc -l)
-    if [ $nseq -lt $ntheoseq ]; then
-        python3 check_and_download_database.py check
-    else
-        break
-    fi
-done
+ntheoseq=$(wc -l < list_ids.txt)
+nseq=$(grep -o ">" plasmid_refseq.fasta | wc -l)
+if [ $nseq -lt $ntheoseq ]; then
+    python3 check_and_download_database.py check
+else
+    break
+fi
+
 makeblastdb -in plasmid_refseq.fasta -dbtype nucl -parse_seqids
 
