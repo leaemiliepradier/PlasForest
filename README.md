@@ -22,6 +22,10 @@ Python dependencies can be manually installed using ```pip```:
 ````
 pip install --user biopython numpy pandas joblib scikit-learn==0.22.2.post1
 ````
+or using ```conda```:
+````
+conda env create -f environment.yml
+````
 on Ubuntu/Debian, NCBI Blast+ can be installed through the repositories with the command ```sudo apt-get install ncbi-blast+```. For other systems, it is advised to download the binaries from the NCBI FTP repository:
 ````
 # Download latest BLAST version
