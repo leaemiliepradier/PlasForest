@@ -77,6 +77,10 @@ Option ```--threads <int>``` allows to define the number of CPUs on which PlasFo
 
 Option ```--size_of_batch <int>``` allows to define how many sequences can be used in the single batch.
 
+Option ```--model <path>``` allows to define your own path for the .sav model.
+
+Option ```--database <path>``` allows to define your own path to the plasmid database.
+
 ### Training PlasForest on custom data
 The classifier is already provided for PlasForest and there is no need to train it again. However, if you want to train PlasForest on a custom training dataset and/or using a custom plasmid database, you can do it by using ```train_plasforest.py```.
 
