@@ -3,7 +3,7 @@
 
 #######################################################################################
 ###                                                                                 ###
-###     PlasForest 1.1                                                              ###
+###     PlasForest 1.3                                                              ###
 ###     Copyright (C) 2020  Léa Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier,  ###
 ###                         Stéphanie Bedhomme. (leaemiliepradier@gmail.com)        ###
 ###                                                                                 ###
@@ -60,45 +60,68 @@ def get_response(nmissing):
         print("")
     return response
 
-def get_email():
-    regex = '^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$'
-    print("The missing sequences will be downloaded from NCBI Entrez.")
-    print("Entrez requires your email address to download a large batch of sequences.")
-    print("It will only be communicated to NCBI and will not be collected for any purpose.")
-    email=input("Please enter an email address: ")
-    while not re.search(regex,email):
-        email=input("Please enter a valid email address: ")
+def get_email(email):
+    if len(email) == 0:
+        regex = '^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$'
+        print("The missing sequences will be downloaded from NCBI Entrez.")
+        print("Entrez requires your email address to download a large batch of sequences.")
+        print("It will only be communicated to NCBI and will not be collected for any purpose.")
+        email=input("Please enter an email address: ")
+        while not re.search(regex,email):
+            email=input("Please enter a valid email address: ")
     return email
 
+def get_batchsize(nmissing):
+    default_batchsize = nmissing
+    print("Entrez will now download the %s missing sequences with a batch of %s." % (nmissing, nmissing))
+    print("Large batch size are faster to download, but increase the risk of failure.")
+    print("We advise to select a small (<100) batch size, to reduce the risk of failure.")
+    batch_size=input("Enter a new batch size if you want (default=%s, leave empty to keep default): " % nmissing)
+    if batch_size == "":
+        batch_size = default_batchsize
+    while not str(batch_size).isnumeric():
+        batch_size=input("Enter a new batch size if you want (default=200, leave empty to keep default): ")
+        if batch_size == "":
+            batch_size = default_batchsize
+    batch_size = int(batch_size)
+    return batch_size
 
-def download_missing(list_ids, email):
+
+def download_missing(list_ids, email, batch_size):
     Entrez.email = email
-    request = Entrez.epost("nucleotide",id=",".join(map(str,list_ids)))
-    result = Entrez.read(request)
-    webEnv = result["WebEnv"]
-    queryKey = result["QueryKey"]
-    handle = Entrez.efetch(db="nucleotide",rettype="fasta", retmode="text",webenv=webEnv, query_key=queryKey)
-    for record in SeqIO.parse(handle,"fasta"):
-        with open("plasmid_refseq.fasta","a+") as out:
-            SeqIO.write(record,out,"fasta")
+    for i in range(0, len(list_ids), batch_size):
+        print("Downloading sequences from %d to %d out of %d" %(i+1,i+batch_size,len(list_ids)))
+        tmp_list_ids = list_ids[i:i + batch_size]
+        try:
+            request = Entrez.epost("nucleotide",id=",".join(map(str,tmp_list_ids)))
+            result = Entrez.read(request)
+            webEnv = result["WebEnv"]
+            queryKey = result["QueryKey"]
+            handle = Entrez.efetch(db="nucleotide",rettype="fasta", retmode="text",webenv=webEnv, query_key=queryKey)
+            for record in SeqIO.parse(handle,"fasta"):
+                with open("plasmid_refseq.fasta","a+") as out:
+                    SeqIO.write(record,out,"fasta")
+        except:
+            print("ERROR: Some sequences could not be downloaded. You may retry with a smaller batch size.")
             
 def make_blast_database():
     os.system("makeblastdb -in plasmid_refseq.fasta -dbtype nucl -parse_seqids")
 
-if sys.argv[1] == "check":
+if sys.argv[1] in ["check","download"]:
     list_missing = check_missing()
     nmissing = len(list_missing)
-    if nmissing > 0:
+    email=""
+    while nmissing > 0:
         response = get_response(nmissing)
         if response=="y":
-            email=get_email()
-            download_missing(list_missing, email)
-elif sys.argv[1] == "download":
-    list_missing = check_missing()
-    nmissing = len(list_missing)
-    if nmissing > 0:
-        email=get_email()
-        download_missing(list_missing,email)
-        make_blast_database()
+            email = get_email(email)
+            batch_size = get_batchsize(nmissing)
+            download_missing(list_missing, email, batch_size)
+            list_missing = check_missing()
+            nmissing = len(list_missing)
+        else:
+            break
+if sys.argv[1] == "download":
+    make_blast_database()
 
 

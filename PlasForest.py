@@ -3,7 +3,7 @@
 
 #######################################################################################
 ###                                                                                 ###
-###     PlasForest 1.2                                                              ###
+###     PlasForest 1.3                                                              ###
 ###     Copyright (C) 2020  Léa Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier,  ###
 ###                         Stéphanie Bedhomme. (leaemiliepradier@gmail.com)        ###
 ###                                                                                 ###
@@ -42,7 +42,6 @@ start_time = time.time()
 ### GLOBALS ###
 global attributed_IDs, attributed_identities
 attributed_IDs = []; attributed_identities = [];
-plasforest = pickle.load(open("plasforest.sav","rb"))
 
 ### MAIN ###
 def main(argv):
@@ -54,20 +53,14 @@ def main(argv):
     reattribute = False
     nthreads = 1
     batch=0
+    modelpath = "plasforest.sav"
+    databasepath = "plasmid_refseq.fasta"
     # INPUT OPTIONS #
     print("PlasForest: a homology-based random forest classifier for plasmid identification.")
     print("(C) Lea Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier, Stephanie Bedhomme. 2020.")
-    if not os.path.isfile("plasforest.sav"):
-        print("Error: plasforest.sav is not in the directory.")
-        if os.path.isfile("plasforest.sav.tar.gz"):
-            print("Please decompress plasforest.sav.tar.gz before launching PlasForest.")
-        sys.exit(2)
-    if not os.path.isfile("plasmid_refseq.fasta"):
-        print("Error: plasmid_refseq.fasta is not in the directory.")
-        print("Please execute ./database_downloader.sh before launching PlasForest.")
-        sys.exit(2)
+
     try:
-        opts, args = getopt.getopt(argv,"hi:o:bfvr", ["help","input=","output=","threads=","size_of_batch="])
+        opts, args = getopt.getopt(argv,"hi:o:bfvrmd", ["help","input=","output=","threads=","size_of_batch=","model=","database="])
     except getopt.GetoptError:
         print('./PlasForest.py -i <inputfile> -o <outputfile>')
         print('\t -i, --input <inputfile>: a FASTA input file')
@@ -78,6 +71,8 @@ def main(argv):
         print('\t --threads <int>: number of threads (default: 1)')
         print('\t --size_of_batch <int>: number of sequences per batch')
         print('\t -r: reattribute contigs which are already described as plasmid or chromosome')
+        print('\t -m, --model <path>/plasforest.sav: path to the .sav model file')
+        print('\t -d, --database <path>/plasmid_refseq.fasta: path to the database')
         print('\t -v: verbose mode')
         print('\t -h, --help: show this message and quit')
         sys.exit(2)
@@ -92,6 +87,8 @@ def main(argv):
             print('\t --threads <int>: number of threads (default: 1)')
             print('\t --size_of_batch <int>: number of sequences per batch')
             print('\t -r: reassign contigs which are already described as plasmid or chromosome')
+            print('\t -m, --model <path>/plasforest.sav: path to the .sav model file')
+            print('\t -d, --database <path>/plasmid_refseq.fasta: path to the database')
             print('\t -v: verbose mode')
             print('\t -h, --help: show this message and quit')
             sys.exit()
@@ -123,6 +120,21 @@ def main(argv):
                 print("Error: size_of_batch must be integer.")
                 sys.exit()
             batch = int(arg)
+        elif opt in ("-m", "--model"):
+            if os.path.exists(arg):
+                modelpath = arg
+            else:
+                print("Error: cannot find the path to the .sav file")
+                sys.exit()
+        elif opt in ("-d", "--database"):
+            if os.path.exists(arg):
+                databasepath = arg
+            else:
+                print("Error: cannot find the path to the plasmid database")
+                sys.exit()
+
+    plasforest = pickle.load(open(modelpath,"rb"))
+
     if verbose: print("Applying PlasForest on "+inputfile+".")
     tmp_fasta = inputfile+"_tmp.fasta"
     blast_table = inputfile+"_blast.out"
@@ -130,7 +142,7 @@ def main(argv):
     if batch==0:
         list_records = seq_checker(inputfile, tmp_fasta, verbose, reattribute)
         if(os.path.isfile(tmp_fasta)):
-            blast_launcher(tmp_fasta, blast_table, verbose, nthreads)
+            blast_launcher(tmp_fasta, blast_table, verbose, nthreads, databasepath)
             features = get_features(list_records, blast_table, verbose, nthreads)
             finalfile = plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities, nthreads)
             os.remove(tmp_fasta)
@@ -148,7 +160,7 @@ def main(argv):
             list_records = seq_checker_batch(inputfile, tmp_fasta, verbose, reattribute, batch, nb_seqs_analyzed)
             nb_seqs_analyzed = nb_seqs_analyzed + len(list_records)
             if(os.path.isfile(tmp_fasta)):
-                blast_launcher(tmp_fasta, blast_table, verbose, nthreads)
+                blast_launcher(tmp_fasta, blast_table, verbose, nthreads, databasepath)
                 features = get_features(list_records, blast_table, verbose, nthreads)
                 tmp_finalfile = plasforest_predict(features, showFeatures, besthits, verbose, attributed_IDs, attributed_identities, nthreads)
                 os.remove(tmp_fasta)
@@ -232,8 +244,8 @@ def seq_checker_batch(inputfile, tmp_fasta, verbose, reattribute, batch, nb_alre
     return list_records
 
 ### BLAST LAUNCHER ###
-def blast_launcher(tmp_fasta, blast_table, verbose, nthreads):
-    blastn_cline = NcbiblastnCommandline(query = tmp_fasta, db = "plasmid_refseq.fasta", evalue = 0.001, outfmt = 6, out = blast_table, num_threads=nthreads)
+def blast_launcher(tmp_fasta, blast_table, verbose, nthreads, databasepath):
+    blastn_cline = NcbiblastnCommandline(query = tmp_fasta, db = databasepath, evalue = 0.001, outfmt = 6, out = blast_table, num_threads=nthreads)
     if verbose: print("Starting BLASTn...")
     stdout, stderr = blastn_cline()
     if verbose: print("BLASTn is over!")
