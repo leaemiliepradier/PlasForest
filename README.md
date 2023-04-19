@@ -77,7 +77,7 @@ Option ```--threads <int>``` allows to define the number of CPUs on which PlasFo
 
 Option ```--size_of_batch <int>``` allows to define how many sequences can be used in the single batch.
 
-Option ```--model <path>``` allows to define your own path for the .sav model.
+Option ```--model <path>``` allows to define your own path for the .sav model. [*UNTESTED: It is likely that it won't be compatible with multithread prediction. You may still modify the path of to the .sav model in the PlasForest.py script.*]
 
 Option ```--database <path>``` allows to define your own path to the plasmid database.
 
