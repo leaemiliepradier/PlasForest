@@ -42,6 +42,7 @@ start_time = time.time()
 ### GLOBALS ###
 global attributed_IDs, attributed_identities
 attributed_IDs = []; attributed_identities = [];
+plasforest = pickle.load(open("plasforest.sav","rb"))
 
 ### MAIN ###
 def main(argv):
@@ -121,19 +122,17 @@ def main(argv):
                 sys.exit()
             batch = int(arg)
         elif opt in ("-m", "--model"):
-            if os.path.exists(arg):
-                modelpath = arg
+            if os.path.exists(arg) and os.path.isfile(arg) and arg.endswith(".sav"):
+                plasforest = pickle.load(open(arg,"rb"))
             else:
                 print("Error: cannot find the path to the .sav file")
                 sys.exit()
         elif opt in ("-d", "--database"):
-            if os.path.exists(arg):
+            if os.path.exists(arg) and os.path.isfile(arg) and arg.endswith(".fasta"):
                 databasepath = arg
             else:
                 print("Error: cannot find the path to the plasmid database")
                 sys.exit()
-
-    plasforest = pickle.load(open(modelpath,"rb"))
 
     if verbose: print("Applying PlasForest on "+inputfile+".")
     tmp_fasta = inputfile+"_tmp.fasta"
