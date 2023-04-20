@@ -3,7 +3,7 @@
 
 #######################################################################################
 ###                                                                                 ###
-###     PlasForest 1.3                                                              ###
+###     PlasForest 1.4                                                              ###
 ###     Copyright (C) 2020  Léa Pradier, Tazzio Tissot, Anna-Sophie Fiston-Lavier,  ###
 ###                         Stéphanie Bedhomme. (leaemiliepradier@gmail.com)        ###
 ###                                                                                 ###
@@ -36,13 +36,14 @@ from Bio import SeqUtils
 from Bio.SeqRecord import SeqRecord
 from multiprocessing import Pool
 import time
+import warnings
+warnings.filterwarnings("ignore")
 
 start_time = time.time()
 
 ### GLOBALS ###
 global attributed_IDs, attributed_identities
 attributed_IDs = []; attributed_identities = [];
-plasforest = pickle.load(open("plasforest.sav","rb"))
 
 ### MAIN ###
 def main(argv):
@@ -72,8 +73,8 @@ def main(argv):
         print('\t --threads <int>: number of threads (default: 1)')
         print('\t --size_of_batch <int>: number of sequences per batch')
         print('\t -r: reattribute contigs which are already described as plasmid or chromosome')
-        print('\t -m, --model <path>/plasforest.sav: path to the .sav model file')
-        print('\t -d, --database <path>/plasmid_refseq.fasta: path to the database')
+        print('\t --model <path>/plasforest.sav: path to the .sav model file')
+        print('\t --database <path>/plasmid_refseq.fasta: path to the database')
         print('\t -v: verbose mode')
         print('\t -h, --help: show this message and quit')
         sys.exit(2)
@@ -88,8 +89,8 @@ def main(argv):
             print('\t --threads <int>: number of threads (default: 1)')
             print('\t --size_of_batch <int>: number of sequences per batch')
             print('\t -r: reassign contigs which are already described as plasmid or chromosome')
-            print('\t -m, --model <path>/plasforest.sav: path to the .sav model file')
-            print('\t -d, --database <path>/plasmid_refseq.fasta: path to the database')
+            print('\t --model <path>/plasforest.sav: path to the .sav model file')
+            print('\t --database <path>/plasmid_refseq.fasta: path to the database')
             print('\t -v: verbose mode')
             print('\t -h, --help: show this message and quit')
             sys.exit()
@@ -121,19 +122,21 @@ def main(argv):
                 print("Error: size_of_batch must be integer.")
                 sys.exit()
             batch = int(arg)
-        elif opt in ("-m", "--model"):
-            if os.path.exists(arg) and os.path.isfile(arg) and arg.endswith(".sav"):
-                plasforest = pickle.load(open(arg,"rb"))
-            else:
-                print("Error: cannot find the path to the .sav file")
-                sys.exit()
+        elif opt in ("--model"):
+            modelpath = arg
         elif opt in ("-d", "--database"):
             if os.path.exists(arg) and os.path.isfile(arg) and arg.endswith(".fasta"):
                 databasepath = arg
             else:
                 print("Error: cannot find the path to the plasmid database")
                 sys.exit()
-
+                
+    if os.path.exists(modelpath) and os.path.isfile(modelpath) and modelpath.endswith(".sav"):
+        global plasforest
+        plasforest = pickle.load(open(modelpath,"rb"))
+    else:
+        print("Error: cannot find the path to the .sav file")
+        sys.exit()
     if verbose: print("Applying PlasForest on "+inputfile+".")
     tmp_fasta = inputfile+"_tmp.fasta"
     blast_table = inputfile+"_blast.out"
